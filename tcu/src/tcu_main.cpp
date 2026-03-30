@@ -20,13 +20,16 @@ int main() {
 
     client.set_message_handler(
         [&](const std::string& topic, const std::string& payload) {
-            std::cout << "[TCU] RX: " << topic << std::endl;
+            std::cout << "[TCU RX] " << topic << std::endl;
 
             // Update payload
             std::string enriched = payload;
 
             // Example: add a tag for TCU
-            enriched.insert(enriched.size() - 1, ",\"tcu\":\"pi4\"");
+            auto pos{enriched.rfind('}')};
+            if (pos != std::string::npos) {
+                enriched.insert(pos, ",\"tcu\":\"pi4\"");
+            }
 
             // Forward to cloud namespace
             client.publish(CLOUD_TOPIC, enriched, 1);

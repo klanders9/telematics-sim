@@ -6,7 +6,7 @@
 
 #include "telemetry/mqtt_client.hpp"
 
-constexpr const char* PUB_TOPIC = "cloud/#";
+constexpr const char* SUB_TOPIC = "cloud/#";
 
 int main() {
     MqttClient client{"backend"};
@@ -22,11 +22,11 @@ int main() {
             std::cout << payload << std::endl;
 
             if (payload.find("OVERHEAT") != std::string::npos) {
-                std::cout << "!!! ALERT: Overheat detected !!!" << std::endl;
+                std::cout << "[BACKEND] !!! ALERT: Overheat detected !!!" << std::endl;
             }
         });
 
-    client.subscribe(PUB_TOPIC, 1);
+    client.subscribe(SUB_TOPIC, 1);
     client.loop_start();
 
     while (true) {

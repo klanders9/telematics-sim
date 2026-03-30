@@ -5,6 +5,7 @@
 
 #include <string>
 #include <optional>
+#include <cstdint>
 
 struct GPS {
     double lat;
@@ -13,7 +14,7 @@ struct GPS {
 
 struct TelemetryMessage {
     std::string device_id;
-    long timestamp;
+    uint64_t timestamp;
     int rpm;
     int coolant_temp;
     int fuel_level;

@@ -30,11 +30,21 @@ bool MqttClient::connect(const std::string &host, int port, int keepalive) {
 }
 
 bool MqttClient::publish(const std::string &topic, const std::string &payload, int qos) {
-    return mosquitto_publish(mosq_, nullptr, topic.c_str(), payload.size(), payload.c_str(), qos, false);
+    auto rc = mosquitto_publish(mosq_, nullptr, topic.c_str(), payload.size(), payload.c_str(), qos, false);
+    if (rc != MOSQ_ERR_SUCCESS) {
+        std::cerr << "Publish error: " << mosquitto_strerror(rc) << std::endl;
+        return false;
+    }
+    return true;
 }
 
 bool MqttClient::subscribe(const std::string& topic, int qos) {
-    return mosquitto_subscribe(mosq_, nullptr, topic.c_str(), qos);
+    auto rc = mosquitto_subscribe(mosq_, nullptr, topic.c_str(), qos);
+    if (rc != MOSQ_ERR_SUCCESS) {
+        std::cerr << "Subscribe error: " << mosquitto_strerror(rc) << std::endl;
+        return false;
+    }
+    return true;
 }
 
 void MqttClient::loop_start() {

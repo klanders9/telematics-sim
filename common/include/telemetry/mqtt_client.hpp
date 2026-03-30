@@ -14,6 +14,12 @@ public:
     MqttClient(const std::string& client_id);
     ~MqttClient();
 
+    // no moving or copying for now
+    MqttClient(MqttClient const&) = delete;
+    MqttClient(MqttClient&&) = delete;
+    MqttClient& operator=(MqttClient const&) = delete;
+    MqttClient& operator=(MqttClient&&) = delete;
+
     bool connect(const std::string& host, int port, int keepalive = 60);
     bool publish(const std::string& topic, const std::string& payload, int qos = 1);
     bool subscribe(const std::string& topic, int qos = 1);

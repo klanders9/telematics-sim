@@ -18,7 +18,7 @@ std::string to_json(const TelemetryMessage& msg) {
     oss << "\"lon\":" << msg.gps.lon << "},";
 
     if (msg.fault.has_value()) {
-        oss << "\"fault\":" << msg.fault.value() << "\"";
+        oss << "\"fault\":\"" << msg.fault.value() << "\"";
     }
     else {
         oss << "\"fault\":null";
