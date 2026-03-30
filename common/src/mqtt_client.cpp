@@ -21,7 +21,12 @@ MqttClient::~MqttClient() {
 }
 
 bool MqttClient::connect(const std::string &host, int port, int keepalive) {
-    return mosquitto_connect(mosq_, host.c_str(), port, keepalive);
+    auto rc = mosquitto_connect(mosq_, host.c_str(), port, keepalive);
+    if (rc != MOSQ_ERR_SUCCESS) {
+        std::cerr << "MQTT connect error: " << mosquitto_strerror(rc) << std::endl;
+        return false;
+    }
+    return true;
 }
 
 bool MqttClient::publish(const std::string &topic, const std::string &payload, int qos) {

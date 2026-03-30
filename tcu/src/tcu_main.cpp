@@ -7,13 +7,13 @@
 
 #include "telemetry/mqtt_client.hpp"
 
-constexpr const char* DEVICE_TOPIC = "telematics/veh_001";
+constexpr const char* DEVICE_TOPIC = "telematics/#";
 constexpr const char* CLOUD_TOPIC = "cloud/veh_001";
 
 int main() {
     MqttClient client("tcu");
 
-    if (!client.connect("localhost", 1883)) {
+    if (!client.connect("tcu", 1883)) {
         std::cerr << "TCU failed to connect" << std::endl;
         return 1;
     }

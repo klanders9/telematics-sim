@@ -11,7 +11,7 @@ constexpr const char* PUB_TOPIC = "cloud/#";
 int main() {
     MqttClient client{"backend"};
 
-    if (!client.connect(std::string{"localhost"}, 1883, 60)) {
+    if (!client.connect("tcu", 1883, 60)) {
         std::cerr << "Backend connect failed" << std::endl;
         return 1;
     }

@@ -35,7 +35,7 @@ int main() {
     srand(time(nullptr));
 
     MqttClient client("sensor_farm");
-    if (!client.connect("localhost", 1883)) {
+    if (!client.connect("tcu", 1883)) {
         std::cerr << "Device failed to connect to broker" << std::endl;
         return 1;
     }
