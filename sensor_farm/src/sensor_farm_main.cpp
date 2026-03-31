@@ -1,16 +1,20 @@
 // Copyright 2026 Kevin Landers <kmlanders@gmail.com>
 
-#include <iostream>
-#include <thread>
+#include <atomic>
 #include <chrono>
+#include <csignal>
+#include <iostream>
 #include <random>
+#include <thread>
 
 #include "telemetry/message.hpp"
 #include "telemetry/json_utils.hpp"
 #include "telemetry/mqtt_client.hpp"
 
-constexpr const char* SUB_TOPIC = "telematics/veh_001";
+constexpr const char* PUB_TOPIC = "telematics/veh_001";
 constexpr const char* CMD_TOPIC = "cmd/veh_001";
+
+static std::atomic<bool> running{true};
 
 TelemetryMessage generate_message(std::mt19937& rng) {
     TelemetryMessage msg;
@@ -33,15 +37,14 @@ TelemetryMessage generate_message(std::mt19937& rng) {
 }
 
 int main() {
+    std::signal(SIGINT,  [](int) { running = false; });
+    std::signal(SIGTERM, [](int) { running = false; });
+
     std::mt19937 rng(std::random_device{}());
 
     MqttClient client("sensor_farm");
-    if (!client.connect("tcu", 1883)) {
-        std::cerr << "Device failed to connect to broker" << std::endl;
-        return 1;
-    }
 
-    // Future: handle simualted OTA update request
+    // Future: handle simulated OTA update request
     client.set_message_handler(
         [](const std::string& topic, const std::string& payload) {
             std::cout << "[SENSOR_FARM RX] " << topic << std::endl;
@@ -52,16 +55,38 @@ int main() {
             }
         });
 
-    client.subscribe(CMD_TOPIC, 1);
-    client.loop_start();
+    // Subscribe inside on_connect so topics are re-subscribed after reconnect
+    client.set_connect_handler(
+        [&client](int rc) {
+            if (rc != 0) return;
+            std::cout << "[SENSOR_FARM] Connected to broker" << std::endl;
+            client.subscribe(CMD_TOPIC, 1);
+        });
+
+    client.set_disconnect_handler(
+        [](int rc) {
+            if (rc != 0) {
+                std::cout << "[SENSOR_FARM] Disconnected; will reconnect..." << std::endl;
+            }
+        });
+
+    if (!client.connect("tcu", 1883)) {
+        std::cerr << "Device failed to connect to broker" << std::endl;
+        return 1;
+    }
+
+    if (!client.loop_start()) {
+        std::cerr << "[SENSOR_FARM] Failed to start event loop" << std::endl;
+        return 1;
+    }
 
     std::cout << "[SENSOR_FARM]: Running... " << std::endl;
 
-    while (true) {
+    while (running) {
         auto msg = generate_message(rng);
         std::string payload = to_json(msg);
 
-        if (!client.publish(SUB_TOPIC, payload, 1)) {
+        if (!client.publish(PUB_TOPIC, payload, 1)) {
             std::cerr << "[SENSOR_FARM] Failed to publish message" << std::endl;
         }
         else {
@@ -71,8 +96,8 @@ int main() {
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
 
+    std::cout << "[SENSOR_FARM] Shutting down..." << std::endl;
     client.loop_stop();
 
     return 0;
-
 }
